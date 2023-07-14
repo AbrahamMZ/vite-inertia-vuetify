@@ -48,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
             ],
             'navigation' => [
-                'menu' => Menu::getMenuTree('admin')
+                'menu' => Menu::getMenuTree('admin'),
             ]
         ]);
     }

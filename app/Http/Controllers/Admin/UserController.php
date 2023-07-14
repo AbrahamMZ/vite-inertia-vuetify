@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Filters\UserFilters;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
@@ -30,27 +31,30 @@ class UserController extends Controller
      *
      * @return \Inertia\Response
      */
-    public function index()
+    public function index(Request $request, UserFilters $filters)
     {
-        $users = (new User)->newQuery();
+        // $users = (new User)->newQuery();
+        $users = User::filter($filters);
+        // dd($users);
 
-        if (request()->has('search')) {
-            $users->where('name', 'Like', '%'.request()->input('search').'%');
-        }
+        // if (request()->has('search')) {
+        //     $users->where('name', 'Like', '%' . request()->input('search') . '%');
+        // }
 
-        if (request()->query('sort')) {
-            $attribute = request()->query('sort');
-            $sort_order = 'ASC';
-            if (strncmp($attribute, '-', 1) === 0) {
-                $sort_order = 'DESC';
-                $attribute = substr($attribute, 1);
-            }
-            $users->orderBy($attribute, $sort_order);
-        } else {
-            $users->latest();
-        }
+        // if (request()->query('sort')) {
+        //     $attribute = request()->query('sort');
+        //     $sort_order = 'ASC';
+        //     if (strncmp($attribute, '-', 1) === 0) {
+        //         $sort_order = 'DESC';
+        //         $attribute = substr($attribute, 1);
+        //     }
+        //     $users->orderBy($attribute, $sort_order);
+        // } else {
+        //     $users->latest();
+        // }
 
-        $users = $users->paginate(5)->onEachSide(2)->appends(request()->query());
+        // $users = $users->paginate(request()->input('per_page') == -1 ? 999999 : request()->input('per_page') ?? 5)
+        //     ->onEachSide(2)->appends(request()->query());
 
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
@@ -70,7 +74,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all()->pluck("name","id");
+        $roles = Role::all()->pluck("name", "id");
 
         return Inertia::render('Admin/User/Create', [
             'roles' => $roles,
@@ -89,7 +93,7 @@ class UserController extends Controller
         $createUser->handle((object) $request->all());
 
         return redirect()->route('user.index')
-                        ->with('message', __('User created successfully.'));
+            ->with('message', __('User created successfully.'));
     }
 
     /**
@@ -100,7 +104,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $roles = Role::all()->pluck("name","id");
+        $roles = Role::all()->pluck("name", "id");
         $userHasRoles = array_column(json_decode($user->roles, true), 'id');
 
         return Inertia::render('Admin/User/Show', [
@@ -118,7 +122,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = Role::all()->pluck("name","id");
+        $roles = Role::all()->pluck("name", "id");
         $userHasRoles = array_column(json_decode($user->roles, true), 'id');
 
         return Inertia::render('Admin/User/Edit', [
@@ -141,7 +145,7 @@ class UserController extends Controller
         $updateUser->handle((object) $request->all(), $user);
 
         return redirect()->route('user.index')
-                        ->with('message', __('User updated successfully.'));
+            ->with('message', __('User updated successfully.'));
     }
 
     /**
@@ -155,7 +159,7 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('user.index')
-                        ->with('message', __('User deleted successfully'));
+            ->with('message', __('User deleted successfully'));
     }
 
     /**
@@ -182,7 +186,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.\Auth::user()->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . \Auth::user()->id],
         ]);
 
         $user = \Auth::user()->update($request->except(['_token']));
@@ -214,9 +218,10 @@ class UserController extends Controller
             if ($validator->failed()) {
                 return;
             }
-            if (! Hash::check($request->input('old_password'), \Auth::user()->password)) {
+            if (!Hash::check($request->input('old_password'), \Auth::user()->password)) {
                 $validator->errors()->add(
-                    'old_password', __('Old password is incorrect.')
+                    'old_password',
+                    __('Old password is incorrect.')
                 );
             }
         });

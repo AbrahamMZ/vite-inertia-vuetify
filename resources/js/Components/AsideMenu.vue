@@ -7,7 +7,7 @@ import AsideMenuLayer from '@/Components/AsideMenuLayer.vue'
 import OverlayLayer from '@/Components/OverlayLayer.vue'
 
 let menu = reactive({})
-menu = computed(() => usePage().props.navigation.menu)
+menu = computed(() => usePage().props.navigation.sales)
 
 const layoutStore = useLayoutStore()
 </script>

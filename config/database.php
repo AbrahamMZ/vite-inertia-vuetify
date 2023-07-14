@@ -42,6 +42,30 @@ return [
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],
+        'sqlite_sat_cProductosUnidades40' => [
+            'driver' => 'sqlite',
+            'url' => env('DATABASE_URL'),
+            'database' => database_path('ProductosUnidades40.db3'),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'collation' => 'utf8_unicode_ci',
+        ],
+        'sqlite_sat_cUbicaciones40' => [
+            'driver' => 'sqlite',
+            'url' => env('DATABASE_URL'),
+            'database' => database_path('Ubicaciones40.db3'),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'collation' => 'utf8_unicode_ci',
+        ],
+        'sqlite_sat_cGeneral40' => [
+            'driver' => 'sqlite',
+            'url' => env('DATABASE_URL'),
+            'database' => database_path('CatalogosGeneral40.db3'),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'collation' => 'utf8_unicode_ci',
+        ],
 
         'mysql' => [
             'driver' => 'mysql',

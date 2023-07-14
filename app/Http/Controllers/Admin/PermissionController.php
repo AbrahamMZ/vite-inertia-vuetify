@@ -28,9 +28,10 @@ class PermissionController extends Controller
     {
         $permissions = (new Permission)->newQuery();
 
-        if (request()->has('search')) {
-            $permissions->where('name', 'Like', '%'.request()->input('search').'%');
-        }
+
+        // if (request()->filters['search']) {
+        //     $permissions->where('name', 'Like', '%' . request()->filters['search'] . '%');
+        // }
 
         if (request()->query('sort')) {
             $attribute = request()->query('sort');
@@ -44,7 +45,10 @@ class PermissionController extends Controller
             $permissions->latest();
         }
 
-        $permissions = $permissions->paginate(5)->onEachSide(2)->appends(request()->query());
+        $permissions = $permissions->paginate(request()->input('per_page') == -1 ?
+            999999 :
+            request()->input('per_page') ?? 5)
+            ->onEachSide(2)->appends(request()->query());
 
         return Inertia::render('Admin/Permission/Index', [
             'permissions' => $permissions,
@@ -78,7 +82,7 @@ class PermissionController extends Controller
         Permission::create($request->all());
 
         return redirect()->route('permission.index')
-                        ->with('message', __('Permission created successfully.'));
+            ->with('message', __('Permission created successfully.'));
     }
 
     /**
@@ -119,7 +123,7 @@ class PermissionController extends Controller
         $permission->update($request->all());
 
         return redirect()->route('permission.index')
-                        ->with('message', __('Permission updated successfully.'));
+            ->with('message', __('Permission updated successfully.'));
     }
 
     /**
@@ -133,6 +137,6 @@ class PermissionController extends Controller
         $permission->delete();
 
         return redirect()->route('permission.index')
-                        ->with('message', __('Permission deleted successfully'));
+            ->with('message', __('Permission deleted successfully'));
     }
 }

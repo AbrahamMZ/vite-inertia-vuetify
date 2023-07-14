@@ -1,61 +1,64 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { useStyleStore } from '@/Stores/style.js'
-import { mdiMinus, mdiPlus } from '@mdi/js'
-import { getButtonColor } from '@/colors.js'
-import BaseIcon from '@/Components/BaseIcon.vue'
-import AsideMenuList from '@/Components/AsideMenuList.vue'
+import { ref, computed } from "vue";
+import { Link } from "@inertiajs/vue3";
+import { useStyleStore } from "@/Stores/style.js";
+import { mdiMinus, mdiPlus } from "@mdi/js";
+import { getButtonColor } from "@/colors.js";
+import BaseIcon from "@/Components/BaseIcon.vue";
+import AsideMenuList from "@/Components/AsideMenuList.vue";
 
 const props = defineProps({
   item: {
     type: Object,
-    required: true
+    required: true,
   },
   isDropdownList: Boolean,
-})
+});
 
-const itemHref = computed(() => (props.item && props.item.link) ? props.item.link : '')
+const itemHref = computed(() =>
+  props.item && props.item.link ? props.item.link : ""
+);
 
-const emit = defineEmits(['menu-click'])
+const emit = defineEmits(["menu-click"]);
 
-const styleStore = useStyleStore()
+const styleStore = useStyleStore();
 
-const hasColor = computed(() => props.item && props.item.color)
+const hasColor = computed(() => props.item && props.item.color);
 
-const asideMenuItemActiveStyle = computed(() => hasColor.value ? '' : styleStore.asideMenuItemActiveStyle)
+const asideMenuItemActiveStyle = computed(() =>
+  hasColor.value ? "" : styleStore.asideMenuItemActiveStyle
+);
 
-const isDropdownActive = ref(false)
+const isDropdownActive = ref(false);
 
-const componentClass = computed(() => (
-  [
-    props.isDropdownList ? 'py-3 px-6 text-sm' : 'py-3 px-6',
-    hasColor.value
-      ? getButtonColor(props.item.color, false, true)
-      : styleStore.asideMenuItemStyle
-  ]
-))
+const componentClass = computed(() => [
+  props.isDropdownList ? "py-3 px-6 text-sm" : "py-3 px-6",
+  hasColor.value
+    ? getButtonColor(props.item.color, false, true)
+    : styleStore.asideMenuItemStyle,
+]);
 
-const hasDropdown = computed(() => props.item.children)
+const hasDropdown = computed(() => props.item.children);
 
-const menuClick = event => {
-  emit('menu-click', event, props.item)
+const menuClick = (event) => {
+  emit("menu-click", event, props.item);
 
   if (hasDropdown.value) {
-    isDropdownActive.value = !isDropdownActive.value
+    isDropdownActive.value = !isDropdownActive.value;
   }
-}
+};
 
-const activeInactiveStyle = computed(
-  () => props.item.route && route().current(props.item.route)
+const activeInactiveStyle = computed(() =>
+  props.item.route && route().current(props.item.route)
     ? styleStore.asideMenuItemActiveStyle
-    : ''
-)
+    : ""
+);
 </script>
 
 <template>
   <li>
     <component
+      v-if="item.enabled"
       :is="itemHref ? Link : 'div'"
       :href="itemHref"
       :target="item.target ?? null"
@@ -74,7 +77,8 @@ const activeInactiveStyle = computed(
       <span
         class="grow text-ellipsis line-clamp-1"
         :class="activeInactiveStyle"
-      >{{ item.name }}</span>
+        >{{ item.name }}</span
+      >
       <BaseIcon
         v-if="hasDropdown"
         :path="isDropdownActive ? mdiMinus : mdiPlus"
@@ -86,7 +90,10 @@ const activeInactiveStyle = computed(
     <AsideMenuList
       v-if="hasDropdown"
       :menu="item.children"
-      :class="[ styleStore.asideMenuDropdownStyle, isDropdownActive ? 'block dark:bg-slate-800/50' : 'hidden' ]"
+      :class="[
+        styleStore.asideMenuDropdownStyle,
+        isDropdownActive ? 'block dark:bg-slate-800/50' : 'hidden',
+      ]"
       is-dropdown-list
     />
   </li>

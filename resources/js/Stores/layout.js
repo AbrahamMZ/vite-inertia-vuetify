@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export const useLayoutStore = defineStore('layout', {
   state: () => ({
-    isAsideMobileExpanded: false,
+    isAsideMobileExpanded: true,
     isAsideLgActive: false
   }),
 

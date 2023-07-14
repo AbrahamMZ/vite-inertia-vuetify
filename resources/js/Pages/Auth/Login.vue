@@ -1,129 +1,65 @@
 <script setup>
-import { useForm, Head, Link } from '@inertiajs/vue3'
-import { mdiAccount, mdiAsterisk } from '@mdi/js'
-import LayoutGuest from '@/Layouts/LayoutGuest.vue'
-import SectionFullScreen from '@/Components/SectionFullScreen.vue'
-import CardBox from '@/Components/CardBox.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import FormValidationErrors from '@/Components/FormValidationErrors.vue'
-import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
-import BaseLevel from '@/Components/BaseLevel.vue'
+import { useForm, Head, router } from "@inertiajs/vue3";
+import LayoutGuest from "@/Layouts/LayoutGuest.vue";
+import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 
 const props = defineProps({
   canResetPassword: Boolean,
   status: {
     type: String,
-    default: null
-  }
-})
+    default: null,
+  },
+});
 
 const form = useForm({
-  email: '',
-  password: '',
-  remember: []
-})
+  email: "",
+  password: "",
+  remember: [],
+});
 
 const submit = () => {
   form
-    .transform(data => ({
-      ... data,
-      remember: form.remember && form.remember.length ? 'on' : ''
+    .transform((data) => ({
+      ...data,
+      remember: form.remember && form.remember.length ? "on" : "",
     }))
-    .post(route('login'), {
-      onFinish: () => form.reset('password'),
-    })
-}
+    .post(route("login"), {
+      onFinish: () => form.reset("password"),
+    });
+};
 </script>
 
 <template>
   <LayoutGuest>
+
     <Head title="Login" />
+    <VContainer fluid class="d-flex justify-center align-center fill-height">
+      <VCard title="Login" subtitle="Ingrese sus credenciales" min-width="500px" elevation="6">
+        <template #append>
+          <VAvatar size="80">
+            <application-logo></application-logo>
+          </VAvatar>
+        </template>
+        <VCardText>
+          <VForm @submit.prevent="submit">
+            <v-text-field v-model="form.email" type="email" label="E-mail"
+              :error-messages="$page.props.errors.email"></v-text-field>
 
-    <SectionFullScreen
-      v-slot="{ cardClass }"
-      bg="purplePink"
-    >
-      <CardBox
-        :class="cardClass"
-        form
-        @submit.prevent="submit"
-      >
-        <FormValidationErrors />
+            <v-text-field v-model="form.password" type="password" label="Password"
+              :error-messages="$page.props.errors.password"></v-text-field>
 
-        <NotificationBarInCard 
-          v-if="status"
-          color="info"
-        >
-          {{ status }}
-        </NotificationBarInCard>
+            <v-checkbox v-model="form.remember" label="remember" type="checkbox"></v-checkbox>
 
-        <FormField
-          label="Email"
-          label-for="email"
-          help="Please enter your email"
-        >
-          <FormControl
-            v-model="form.email"
-            :icon="mdiAccount"
-            id="email"
-            autocomplete="email"
-            type="email"
-            required
-          />
-        </FormField>
-
-        <FormField
-          label="Password"
-          label-for="password"
-          help="Please enter your password"
-        >
-          <FormControl
-            v-model="form.password"
-            :icon="mdiAsterisk"
-            type="password"
-            id="password"
-            autocomplete="current-password"
-            required
-          />
-        </FormField>
-
-        <FormCheckRadioGroup
-          v-model="form.remember"
-          name="remember"
-          :options="{ remember: 'Remember' }"
-        />
-
-        <BaseDivider />
-
-        <BaseLevel>
-          <BaseButtons>
-            <BaseButton
-              type="submit"
-              color="info"
-              label="Login"
-              :class="{ 'opacity-25': form.processing }"
-              :disabled="form.processing"
-            />
-            <BaseButton
-              v-if="canResetPassword"
-              :route-name="route('password.request')"
-              color="info"
-              outline
-              label="Remind"
-            />
-          </BaseButtons>
-          <Link
-            :href="route('register')"
-          >
-            Register
-          </Link>
-        </BaseLevel>
-      </CardBox>
-    </SectionFullScreen>
+            <div class="d-flex justify-end align-center">
+              <v-btn class="me-4" type="submit" color="primary"> Login </v-btn>
+              <v-btn v-if="canResetPassword" variant="text" @click="router.get(route('password.request'))" class="me-4">
+                remind
+              </v-btn>
+              <VBtn variant="text" @click="router.get(route('register'))"> Register </VBtn>
+            </div>
+          </VForm>
+        </VCardText>
+      </VCard>
+    </VContainer>
   </LayoutGuest>
 </template>

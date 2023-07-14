@@ -1,158 +1,163 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiAccountKey,
-  mdiPlus,
-  mdiSquareEditOutline,
-  mdiTrashCan,
-  mdiAlertBoxOutline,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+import { Head, useForm, router } from "@inertiajs/vue3";
+import LayoutAuthenticated from "@/Layouts/LayoutAuthenticated.vue";
+import { reactive, ref, watch } from "vue";
+import { VDataTableServer } from "vuetify/labs/VDataTable";
 
 const props = defineProps({
-  permissions: {
-    type: Object,
-    default: () => ({}),
-  },
-  filters: {
-    type: Object,
-    default: () => ({}),
-  },
-  can: {
-    type: Object,
-    default: () => ({}),
-  },
-})
+    permissions: {
+        type: Object,
+        default: () => ({}),
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+    can: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+const loading = ref(true);
+const headers = ref([
+    {
+        title: "Nombre Permiso",
+        align: "start",
+        sortable: true,
+        key: "name",
+    },
+    {
+        title: "Guard",
+        align: "center",
+        sortable: true,
+        key: "guard_name",
+    },
+    { title: "Acciones", key: "actions", align: "end", sortable: false },
+]);
+const filters = reactive({
+    search: "",
+    name: "",
+});
 
-const form = useForm({
-  search: props.filters.search,
-})
-
-const formDelete = useForm({})
-
+const formDelete = useForm({});
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
-    formDelete.delete(route("permission.destroy", id))
-  }
+    if (confirm("Are you sure you want to delete?")) {
+        formDelete.delete(route("permission.destroy", id));
+    }
 }
+let _timeout = null;
+watch(
+    filters,
+    () => {
+        clearTimeout(_timeout);
+        _timeout = setTimeout(() => {
+            loadItems({ page: 1, itemsPerPage: 5 });
+        }, 1200);
+    },
+    { immediate: false }
+);
+
+const loadItems = async ({
+    page: page,
+    itemsPerPage: per_page,
+    sortBy: sort,
+}) => {
+    await router.get(
+        route("permission.index"),
+        { page, per_page, sort, filters },
+        {
+            preserveState: true,
+            preserveScroll: false,
+            replace: true,
+            onStart: () => {
+                loading.value = true;
+            },
+            onFinish: () => {
+                loading.value = false;
+            },
+        }
+    );
+};
 </script>
 
 <template>
-  <LayoutAuthenticated>
-    <Head title="Permissions" />
-    <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
-        title="Permissions"
-        main
-      >
-        <BaseButton
-          v-if="can.delete"
-          :route-name="route('permission.create')"
-          :icon="mdiPlus"
-          label="Add"
-          color="info"
-          rounded-full
-          small
-        />
-      </SectionTitleLineWithButton>
-      <NotificationBar
-        v-if="$page.props.flash.message"
-        color="success"
-        :icon="mdiAlertBoxOutline"
-      >
-        {{ $page.props.flash.message }}
-      </NotificationBar>
-      <CardBox class="mb-6" has-table>
-        <form @submit.prevent="form.get(route('permission.index'))">
-          <div class="py-2 flex">
-            <div class="flex pl-4">
-              <input
-                type="search"
-                v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                "
-                placeholder="Search"
-              />
-              <BaseButton
-                label="Search"
-                type="submit"
-                color="info"
-                class="ml-4 inline-flex items-center px-4 py-2"
-              />
-            </div>
-          </div>
-        </form>
-      </CardBox>
-      <CardBox class="mb-6" has-table>
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <Sort label="Name" attribute="name" />
-              </th>
-              <th v-if="can.edit || can.delete">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr v-for="permission in permissions.data" :key="permission.id">
-              <td data-label="Name">
-                <Link
-                  :href="route('permission.show', permission.id)"
-                  class="
-                    no-underline
-                    hover:underline
-                    text-cyan-600
-                    dark:text-cyan-400
-                  "
-                >
-                  {{ permission.name }}
-                </Link>
-              </td>
-              <td
-                v-if="can.edit || can.delete"
-                class="before:hidden lg:w-1 whitespace-nowrap"
-              >
-                <BaseButtons type="justify-start lg:justify-end" no-wrap>
-                  <BaseButton
-                    v-if="can.edit"
-                    :route-name="route('permission.edit', permission.id)"
+    <LayoutAuthenticated>
+        <Head title="Permissions" />
+        <VContainer fluid>
+            <VToolbar density="compact" class="pa-3" color="transparent">
+                <VIcon icon="mdi-account" size="x-large"></VIcon>
+                <VToolbarTitle class="text-h4">Permisos</VToolbarTitle>
+                <VSpacer />
+                <VBtn
+                    prepend-icon="mdi-plus"
                     color="info"
-                    :icon="mdiSquareEditOutline"
-                    small
-                  />
-                  <BaseButton
-                    v-if="can.delete"
-                    color="danger"
-                    :icon="mdiTrashCan"
-                    small
-                    @click="destroy(permission.id)"
-                  />
-                </BaseButtons>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="py-4">
-          <Pagination :data="permissions" />
-        </div>
-      </CardBox>
-    </SectionMain>
-  </LayoutAuthenticated>
+                    variant="outlined"
+                    @click="router.get(route('permission.create'))"
+                >
+                    Agregar
+                </VBtn>
+            </VToolbar>
+            <VAlert
+                :model-value="!!$page.props.flash.message"
+                type="info"
+                title="Notificacion"
+                :text="$page.props.flash.message"
+                closable
+                class="pa-3"
+            >
+            </VAlert>
+            <VToolbar flat class="pa-3 d-flex align center" color="transparent">
+                <VSpacer />
+                <VTextField
+                    v-model="filters.search"
+                    variant="outlined"
+                    persistent-placeholder
+                    style="min-width: 400px"
+                    hide-details
+                    placeholder="Buscar"
+                    clearable
+                />
+            </VToolbar>
+
+            <v-data-table-server
+                v-model:items-per-page="permissions.per_page"
+                v-model:page="permissions.current_page"
+                :headers="headers"
+                :items="permissions.data"
+                :items-length="permissions.total"
+                :items-per-page-options="[
+                    { value: 5, title: '5' },
+                    { value: 10, title: '10' },
+                    { value: 25, title: '25' },
+                    { value: -1, title: '$vuetify.dataFooter.itemsPerPageAll' },
+                ]"
+                :loading="loading"
+                class="elevation-3 rounded-xl"
+                item-value="id"
+                density="compact"
+                @update:options="loadItems"
+            >
+                <template v-slot:[`item.actions`]="{ item }">
+                    <VBtn
+                        icon="mdi-pencil"
+                        variant="plain"
+                        size="small"
+                        color="green-darken-4"
+                        @click="
+                            router.get(route('permission.edit', item.value))
+                        "
+                    >
+                    </VBtn>
+                    <VBtn
+                        icon="mdi-trash-can"
+                        variant="plain"
+                        size="small"
+                        color="red-darken-4"
+                        @click="destroy(item.value)"
+                    >
+                    </VBtn>
+                </template>
+            </v-data-table-server>
+        </VContainer>
+    </LayoutAuthenticated>
 </template>
