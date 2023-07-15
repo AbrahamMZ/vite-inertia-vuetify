@@ -64,7 +64,7 @@ const loadItems = async ({
 }) => {
     await router.get(
         route("permission.index"),
-        { page, per_page, sort, filters },
+        { page, per_page, sort, ...filters },
         {
             preserveState: true,
             preserveScroll: false,

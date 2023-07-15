@@ -1,115 +1,221 @@
 <script setup>
-import { Head, Link, router, useForm } from "@inertiajs/vue3";
+import { Head, router, useForm } from "@inertiajs/vue3";
 
 import LayoutAuthenticated from "@/Layouts/LayoutAuthenticated.vue";
-import Pagination from "@/Components/Admin/Pagination.vue";
-import Sort from "@/Components/Admin/Sort.vue";
-import { watchEffect } from "vue";
+import { VDataTableServer } from "vuetify/labs/VDataTable";
+import { reactive, ref, watch } from "vue";
 
 const props = defineProps({
-    users: {
-        type: Object,
-        default: () => ({}),
-    },
-    filters: {
-        type: Object,
-        default: () => ({}),
-    },
-    can: {
-        type: Object,
-        default: () => ({}),
-    },
+  users: {
+    type: Object,
+    default: () => ({}),
+  },
+  filters: {
+    type: Object,
+    default: () => ({}),
+  },
+  can: {
+    type: Object,
+    default: () => ({}),
+  },
 });
 
-const form = useForm({
-    search: props.filters.search,
-    name: "",
-    email: "",
+const loading = ref(true);
+const headers = ref([
+  {
+    title: "Usuario",
+    align: "start",
+    sortable: true,
+    key: "name",
+  },
+  {
+    title: "Email",
+    align: "center",
+    sortable: true,
+    key: "email",
+  },
+  { title: "Acciones", key: "actions", align: "end", sortable: false },
+]);
+
+const filters = reactive({
+  search: "",
+  name: "",
+  email: "",
 });
 
-watchEffect(
-    async () => {
-        await form.get(route("user.index"), {
-            preserveState: true,
-            preserveScroll: false,
-            replace: true,
-        });
-    },
-    {
-        flush: "post",
-    }
-);
+const pagination = reactive({
+  itemsPerPage: 5,
+  page: 1,
+  sortBy: [],
+});
 
 const formDelete = useForm({});
-
 function destroy(id) {
-    if (confirm("Are you sure you want to delete?")) {
-        formDelete.delete(route("user.destroy", id));
-    }
+  if (confirm("Are you sure you want to delete?")) {
+    formDelete.delete(route("user.destroy", id));
+  }
 }
+
+let _timeout = null;
+watch(
+  filters,
+  () => {
+    clearTimeout(_timeout);
+    _timeout = setTimeout(() => {
+      loadItems(pagination);
+    }, 1200);
+  },
+  { immediate: false }
+);
+
+const loadItems = async (options) => {
+  let params = {
+    ...filters,
+    ...options,
+    per_page: options.itemsPerPage,
+    sort: options.sortBy.reduce((_, obj) => {
+      return obj.order === "desc" ? `-${obj.key}` : obj.key;
+    }, {}),
+  };
+
+  await router.get(route("user.index"), params, {
+    preserveState: true,
+    preserveScroll: false,
+    replace: true,
+    onStart: () => {
+      loading.value = true;
+    },
+    onFinish: () => {
+      loading.value = false;
+    },
+  });
+};
+
+const print = () => window.print();
+const cleanFilter = () => {
+  Object.assign(filters, {
+    search: "",
+    name: "",
+    email: "",
+  });
+};
 </script>
 
 <template>
-    <LayoutAuthenticated>
-        <Head title="Users" />
-        <VContainer fluid>
-            <VToolbar density="compact" class="pa-3" color="transparent">
-                <VIcon icon="mdi-account" size="x-large"></VIcon>
-                <VToolbarTitle class="text-h4">Usuarios</VToolbarTitle>
-                <VSpacer />
-                <VBtn
-                    prepend-icon="mdi-plus"
-                    color="info"
-                    variant="outlined"
-                    @click="router.get(route('user.create'))"
-                >
-                    Agregar
-                </VBtn>
-            </VToolbar>
-            <VAlert
-                :model-value="!!$page.props.flash.message"
-                type="info"
-                title="Notificacion"
-                :text="$page.props.flash.message"
-                closable
-                class="pa-3"
-            >
-            </VAlert>
+  <LayoutAuthenticated>
+    <Head title="Users" />
+    <VContainer fluid>
+      <VToolbar density="compact" class="pa-3" color="transparent">
+        <VIcon icon="mdi-account" size="x-large"></VIcon>
+        <VToolbarTitle class="text-h4">Usuarios</VToolbarTitle>
+        <VSpacer />
+        <VBtn
+          prepend-icon="mdi-plus"
+          color="info"
+          variant="outlined"
+          @click="router.get(route('user.create'))"
+        >
+          Agregar
+        </VBtn>
+      </VToolbar>
+      <VAlert
+        :model-value="!!$page.props.flash.message"
+        type="info"
+        title="Notificacion"
+        :text="$page.props.flash.message"
+        closable
+        class="pa-3"
+      >
+      </VAlert>
 
-            <VSheet class="d-flex flex-wrap">
-                <VTextField
-                    v-model="form.name"
-                    variant="outlined"
-                    density="compact"
-                    placeholder="Buscar Nombre"
-                    persistent-placeholder
-                    hide-details
-                    clearable
-                    class="ma-2 pa-2"
-                />
-                <VTextField
-                    v-model="form.email"
-                    variant="outlined"
-                    density="compact"
-                    placeholder="Buscar Email"
-                    persistent-placeholder
-                    hide-details
-                    clearable
-                    class="ma-2 pa-2"
-                />
-                <VTextField
-                    v-model="form.search"
-                    variant="outlined"
-                    density="compact"
-                    placeholder="Buscar"
-                    persistent-placeholder
-                    hide-details
-                    clearable
-                    class="ma-2 pa-2"
-                />
-            </VSheet>
+      <VSheet class="d-flex flex-wrap align-center">
+        <VTextField
+          v-model="filters.name"
+          variant="outlined"
+          density="compact"
+          placeholder="Buscar Nombre"
+          persistent-placeholder
+          hide-details
+          clearable
+          class="ma-2 pa-2"
+        />
+        <VTextField
+          v-model="filters.email"
+          variant="outlined"
+          density="compact"
+          placeholder="Buscar Email"
+          persistent-placeholder
+          hide-details
+          clearable
+          class="ma-2 pa-2"
+        />
+        <VTextField
+          v-model="filters.search"
+          variant="outlined"
+          density="compact"
+          placeholder="Buscar"
+          persistent-placeholder
+          hide-details
+          clearable
+          class="ma-2 pa-2"
+        />
+        <VBtn
+          icon="mdi-filter-remove-outline"
+          color="red"
+          variant="text"
+          @click="cleanFilter"
+        />
+        <VBtn icon="mdi-microsoft-excel" color="green" variant="text" />
+        <VBtn icon="mdi-printer" color="black" variant="text" @click="print" />
+        <VBtn
+          icon="mdi-refresh"
+          color="primary"
+          variant="text"
+          :loading="loading"
+          @click="loadItems(pagination)"
+        />
+      </VSheet>
 
-            <VTable>
+      <v-data-table-server
+        :headers="headers"
+        :items="users.data"
+        :items-length="users.total"
+        :items-per-page-options="[
+          { value: 5, title: '5' },
+          { value: 10, title: '10' },
+          { value: 25, title: '25' },
+          { value: -1, title: '$vuetify.dataFooter.itemsPerPageAll' },
+        ]"
+        :loading="loading"
+        class="elevation-3 rounded-xl"
+        item-value="id"
+        density="compact"
+        @update:options="loadItems"
+        v-model:options="pagination"
+      >
+        <!-- v-model:items-per-page="users.per_page"
+        v-model:page="users.current_page" -->
+        <template v-slot:[`item.actions`]="{ item }">
+          <VBtn
+            icon="mdi-pencil"
+            variant="plain"
+            size="small"
+            color="green-darken-4"
+            @click="router.get(route('permission.edit', item.value))"
+          >
+          </VBtn>
+          <VBtn
+            icon="mdi-trash-can"
+            variant="plain"
+            size="small"
+            color="red-darken-4"
+            @click="destroy(item.value)"
+          >
+          </VBtn>
+        </template>
+      </v-data-table-server>
+
+      <!-- <VTable>
                 <thead>
                     <tr>
                         <th>
@@ -169,7 +275,7 @@ function destroy(id) {
                         </td>
                     </tr>
                 </tfoot>
-            </VTable>
-        </VContainer>
-    </LayoutAuthenticated>
+            </VTable> -->
+    </VContainer>
+  </LayoutAuthenticated>
 </template>
