@@ -34,6 +34,7 @@ class UserController extends Controller
     public function index(Request $request, UserFilters $filters)
     {
         // $users = (new User)->newQuery();
+        // dd($filters);
         $users = User::filter($filters);
         // dd($users);
 
@@ -58,7 +59,7 @@ class UserController extends Controller
 
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
-            'filters' => request()->all('search'),
+            'filters' => request()->all('search','name','email'),
             'can' => [
                 'create' => Auth::user()->can('user create'),
                 'edit' => Auth::user()->can('user edit'),

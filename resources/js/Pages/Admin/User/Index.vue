@@ -12,7 +12,11 @@ const props = defineProps({
   },
   filters: {
     type: Object,
-    default: () => ({}),
+    default: () => ({
+      search: "",
+      name: "",
+      email: "",
+    }),
   },
   can: {
     type: Object,
@@ -37,11 +41,7 @@ const headers = ref([
   { title: "Acciones", key: "actions", align: "end", sortable: false },
 ]);
 
-const filters = reactive({
-  search: "",
-  name: "",
-  email: "",
-});
+const filters = reactive(props.filters);
 
 const pagination = reactive({
   itemsPerPage: 5,
@@ -192,16 +192,16 @@ const cleanFilter = () => {
         density="compact"
         @update:options="loadItems"
         v-model:options="pagination"
+        v-model:items-per-page="users.per_page"
+        v-model:page="users.current_page"
       >
-        <!-- v-model:items-per-page="users.per_page"
-        v-model:page="users.current_page" -->
         <template v-slot:[`item.actions`]="{ item }">
           <VBtn
             icon="mdi-pencil"
             variant="plain"
             size="small"
             color="green-darken-4"
-            @click="router.get(route('permission.edit', item.value))"
+            @click="router.get(route('user.edit', item.value))"
           >
           </VBtn>
           <VBtn

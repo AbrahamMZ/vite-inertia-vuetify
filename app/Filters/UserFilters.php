@@ -17,7 +17,7 @@ class UserFilters extends QueryFilters
     public function search($term = null)
     {
         return $this->builder->when($term ?? null, function ($query, $term) {
-            $query->where('users.name', 'LIKE', "%$term%")
+            $query->orWhere('users.name', 'LIKE', "%$term%")
                 ->orWhere('users.email', 'LIKE', "%$term%");
         });
     }
