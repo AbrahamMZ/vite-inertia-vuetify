@@ -6,7 +6,7 @@ import vuetify from "vite-plugin-vuetify";
 export default defineConfig({
     server: {
         hmr: {
-            host: "127.0.0.1:8002",
+            host: "app.etbsa.test",
         },
     },
     plugins: [

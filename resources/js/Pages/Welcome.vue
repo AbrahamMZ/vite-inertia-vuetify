@@ -15,10 +15,10 @@ const click = (route) => {
 </script>
 
 <template>
-  <Head title="Welcome Vuetify" />
+  <Head title="Welcome ETBSA" />
   <v-app theme="dark">
     <v-app-bar app>
-      <v-toolbar-title>My APP</v-toolbar-title>
+      <v-toolbar-title>ETBSA</v-toolbar-title>
       <v-spacer></v-spacer>
       <div v-if="canLogin" class="d-flex flex-row">
         <VBtn v-if="$page.props.auth.user" @click="click(route('dashboard'))">
@@ -42,7 +42,7 @@ const click = (route) => {
       <v-container fluid>
         <v-row>
           <v-col>
-            <v-sheet min-height="85vh" rounded="lg"> </v-sheet>
+            <v-sheet min-height="85dvh" rounded="lg"> </v-sheet>
           </v-col>
         </v-row>
       </v-container>
